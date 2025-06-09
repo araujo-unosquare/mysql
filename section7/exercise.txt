@@ -1,0 +1,16 @@
+SELECT REPLACE(title, ' ', '->') FROM books;
+
+SELECT author_lname as forwards, reverse(author_lname) as backwards FROM books;
+
+SELECT upper(concat(author_fname, ' ', author_lname)) as 'full name in caps' FROM books;
+
+SELECT concat(title, ' was released in ', released_year) as blurb FROM books;
+
+SELECT title, char_length(title) as 'character count' FROM books;
+
+SELECT 
+    CONCAT(SUBSTR(title, 1, 10), '...') AS 'short title',
+    CONCAT(author_lname, ',', author_fname) AS author,
+    CONCAT(stock_quantity, ' in stock')
+FROM
+    books;
