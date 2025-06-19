@@ -1,0 +1,157 @@
+The CHAR and VARCHAR Types
+
+The CHAR and VARCHAR types are similar, but differ in the way they are stored and retrieved. They also differ in maximum length and in whether trailing spaces are retained.
+
+The CHAR and VARCHAR types are declared with a length that indicates the maximum number of characters you want to store. For example, CHAR(30) can hold up to 30 characters.
+
+The length of a CHAR column is fixed to the length that you declare when you create the table. The length can be any value from 0 to 255. When CHAR values are stored, they are right-padded with spaces to the specified length. When CHAR values are retrieved, trailing spaces are removed unless the PAD_CHAR_TO_FULL_LENGTH SQL mode is enabled.
+
+Values in VARCHAR columns are variable-length strings. The length can be specified as a value from 0 to 65,535. The effective maximum length of a VARCHAR is subject to the maximum row size (65,535 bytes, which is shared among all columns) and the character set used. See Section 10.4.7, “Limits on Table Column Count and Row Size”.
+
+
+
+
+Required Storage and Range for Integer Types Supported by MySQL
+
+Type	Storage (Bytes)	    Minimum Value Signed	Minimum Value Unsigned	Maximum Value Signed	Maximum Value Unsigned
+TINYINT 	1	            -128	                0	                    127	                    255
+SMALLINT	2	            -32768	                0	                    32767	                65535
+MEDIUMINT	3	            -8388608	            0	                    8388607	                16777215
+INT     	4	            -2147483648	            0	                    2147483647	            4294967295
+BIGINT  	8	            -263	                0	                    2^63-1	                2^64-1
+
+
+
+DECIMAL, NUMERIC
+The DECIMAL and NUMERIC types store exact numeric data values. These types are used when it is important to preserve exact precision, for example with monetary data. In MySQL, NUMERIC is implemented as DECIMAL, so the following remarks about DECIMAL apply equally to NUMERIC.
+
+In a DECIMAL column declaration, the precision and scale can be (and usually is) specified. For example:
+
+salary DECIMAL(5,2)
+In this example, 5 is the precision and 2 is the scale. The precision represents the number of significant digits that are stored for values, and the scale represents the number of digits that can be stored following the decimal point.
+
+Standard SQL requires that DECIMAL(5,2) be able to store any value with five digits and two decimals, so values that can be stored in the salary column range from -999.99 to 999.99.
+
+
+
+Floating-Point Types (Approximate Value) - FLOAT, DOUBLE
+The FLOAT and DOUBLE types represent approximate numeric data values. MySQL uses four bytes for single-precision values and eight bytes for double-precision values.
+
+For FLOAT, the SQL standard permits an optional specification of the precision (but not the range of the exponent) in bits following the keyword FLOAT in parentheses, that is, FLOAT(p). MySQL also supports this optional precision specification, but the precision value in FLOAT(p) is used only to determine storage size. A precision from 0 to 23 results in a 4-byte single-precision FLOAT column. A precision from 24 to 53 results in an 8-byte double-precision DOUBLE column.
+
+MySQL permits a nonstandard syntax: FLOAT(M,D) or REAL(M,D) or DOUBLE PRECISION(M,D). Here, (M,D) means than values can be stored with up to M digits in total, of which D digits may be after the decimal point. For example, a column defined as FLOAT(7,4) is displayed as -999.9999. MySQL performs rounding when storing values, so if you insert 999.00009 into a FLOAT(7,4) column, the approximate result is 999.0001.
+
+
+
+
+The DATE type is used for values with a date part but no time part. MySQL retrieves and displays DATE values in 'YYYY-MM-DD' format. The supported range is '1000-01-01' to '9999-12-31'.
+
+MySQL retrieves and displays TIME values in 'hh:mm:ss' format (or 'hhh:mm:ss' format for large hours values). TIME values may range from '-838:59:59' to '838:59:59'. The hours part may be so large because the TIME type can be used not only to represent a time of day (which must be less than 24 hours), but also elapsed time or a time interval between two events (which may be much greater than 24 hours, or even negative).
+
+
+The DATETIME type is used for values that contain both date and time parts. MySQL retrieves and displays DATETIME values in 'YYYY-MM-DD hh:mm:ss' format. The supported range is '1000-01-01 00:00:00' to '9999-12-31 23:59:59'.
+
+CREATE TABLE people (
+	name VARCHAR(100),
+    birthdate DATE,
+    birthtime TIME,
+    birthdt DATETIME
+);
+ 
+INSERT INTO people (name, birthdate, birthtime, birthdt)
+VALUES ('Elton', '2000-12-25', '11:00:00', '2000-12-25 11:00:00');
+ 
+INSERT INTO people (name, birthdate, birthtime, birthdt)
+VALUES ('Lulu', '1985-04-11', '9:45:10', '1985-04-11 9:45:10');
+ 
+INSERT INTO people (name, birthdate, birthtime, birthdt)
+
+
+SELECT CURTIME();
+ 
+SELECT CURDATE();
+ 
+SELECT NOW();
+ 
+INSERT INTO people (name, birthdate, birthtime, birthdt)
+VALUES ('Hazel', CURDATE(), CURTIME(), NOW());
+
+
+SELECT 
+    birthdate,
+    DAY(birthdate),
+    DAYOFWEEK(birthdate),
+    DAYOFYEAR(birthdate)
+FROM people;
+ 
+SELECT 
+    birthdate,
+    MONTHNAME(birthdate),
+    YEAR(birthdate)
+FROM people;
+
+SELECT 
+    birthtime,
+    HOUR(birthtime),
+    MINUTE(birthtime)
+FROM people;
+ 
+SELECT 
+    birthdt,
+    MONTH(birthdt),
+    DAY(birthdt),
+    HOUR(birthdt),
+    MINUTE(birthdt)
+FROM people;
+
+SELECT birthdate, DATE_FORMAT(birthdate, '%a %b %D') FROM people;
+ 
+SELECT birthdt, DATE_FORMAT(birthdt, '%H:%i') FROM people;
+ 
+SELECT birthdt, DATE_FORMAT(birthdt, 'BORN ON: %r') FROM people;
+
+
+DATEDIFF(expr1,expr2)
+
+DATEDIFF() returns expr1 − expr2 expressed as a value in days from one date to the other. expr1 and expr2 are date or date-and-time expressions. Only the date parts of the values are used in the calculation.
+
+
+DATE_ADD(date,INTERVAL expr unit), DATE_SUB(date,INTERVAL expr unit)
+
+These functions perform date arithmetic. The date argument specifies the starting date or datetime value. expr is an expression specifying the interval value to be added or subtracted from the starting date. expr is evaluated as a string; it may start with a - for negative intervals. unit is a keyword indicating the units in which the expression should be interpreted.
+
+mysql> SELECT DATE_ADD('2018-05-01',INTERVAL 1 DAY);
+        -> '2018-05-02'
+mysql> SELECT DATE_SUB('2018-05-01',INTERVAL 1 YEAR);
+        -> '2017-05-01'
+mysql> SELECT DATE_ADD('2020-12-31 23:59:59',
+    ->                 INTERVAL 1 SECOND);
+        -> '2021-01-01 00:00:00'
+
+
+TIMEDIFF(expr1,expr2)
+
+TIMEDIFF() returns expr1 − expr2 expressed as a time value. expr1 and expr2 are strings which are converted to TIME or DATETIME expressions; these must be of the same type following conversion. Returns NULL if expr1 or expr2 is NULL.
+
+
+The TIMESTAMP data type is used for values that contain both date and time parts. TIMESTAMP has a range of '1970-01-01 00:00:01' UTC to '2038-01-19 03:14:07' UTC.
+
+
+TIMESTAMP and DATETIME columns can be automatically initialized and updated to the current date and time (that is, the current timestamp).
+
+For any TIMESTAMP or DATETIME column in a table, you can assign the current timestamp as the default value, the auto-update value, or both:
+
+An auto-initialized column is set to the current timestamp for inserted rows that specify no value for the column.
+
+An auto-updated column is automatically updated to the current timestamp when the value of any other column in the row is changed from its current value. An auto-updated column remains unchanged if all other columns are set to their current values. To prevent an auto-updated column from updating when other columns change, explicitly set it to its current value. To update an auto-updated column even when other columns do not change, explicitly set it to the value it should have (for example, set it to CURRENT_TIMESTAMP).
+
+CREATE TABLE captions (
+  text VARCHAR(150),
+  created_at TIMESTAMP default CURRENT_TIMESTAMP
+);
+ 
+CREATE TABLE captions2 (
+  text VARCHAR(150),
+  created_at TIMESTAMP default CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
