@@ -1,0 +1,27 @@
+select * from books where released_year < 1980
+
+select * from books where author_lname = 'Eggers' or author_lname = 'Chabon'
+
+select * from books where author_lname = 'Lahiri' and released_year > 2000 
+
+select * from books where pages between 100 and 200
+
+select * from books where author_lname like 'C%' or author_lname like 'S%'
+
+select 
+	title, author_lname,
+    CASE
+		when title like '%stories%' THEN 'Short Stories'
+        when title = 'Just Kids' or title like '%heartbreaking work%' then 'Memoir'
+        else 'Novel'
+    END AS 'TYPE'
+from books
+
+
+select 
+	author_fname, author_lname,
+    CASE
+		when count(*) > 1 then  concat(count(*), ' books')
+        else concat(count(*), ' book')
+    END AS 'COUNT'
+from books group by author_fname, author_lname
