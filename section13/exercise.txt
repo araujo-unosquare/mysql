@@ -1,0 +1,60 @@
+create table students (
+	id int primary key auto_increment,
+    first_name varchar(50)
+);
+
+create table papers (
+	id int primary key auto_increment,
+    title varchar(100),
+    grade int,
+    student_id int,
+    foreign key (student_id) references students(id)
+)
+
+
+SELECT 
+    first_name, title, grade
+FROM
+    students
+        JOIN
+    papers ON students.id = papers.student_id
+
+
+SELECT 
+    first_name, title, grade
+FROM
+    students
+        LEFT JOIN
+    papers ON students.id = papers.student_id
+
+
+
+SELECT 
+    first_name, IFNULL(title, 'MISSING'), IFNULL(grade, 0)
+FROM
+    students
+        LEFT JOIN
+    papers ON students.id = papers.student_id
+
+
+SELECT 
+    first_name, IFNULL(AVG(grade), 0) as average
+FROM
+    students
+        LEFT JOIN
+    papers ON students.id = papers.student_id
+GROUP BY first_name
+
+
+SELECT 
+    first_name,
+    IFNULL(AVG(grade), 0) AS average,
+    CASE
+        WHEN IFNULL(AVG(grade), 0) >= 75 THEN 'PASSING'
+        ELSE 'FAILING'
+    END AS 'passing_status'
+FROM
+    students
+        LEFT JOIN
+    papers ON students.id = papers.student_id
+GROUP BY first_name
