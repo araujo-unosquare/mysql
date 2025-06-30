@@ -1,0 +1,49 @@
+SELECT * FROM ig_clone.users order by created_at limit 5;
+
+SELECT 
+    DAYNAME(created_at) AS day, COUNT(*) AS total
+FROM
+    ig_clone.users
+GROUP BY day
+ORDER BY total DESC
+LIMIT 1;
+
+
+SELECT 
+    username
+FROM
+    users
+        LEFT JOIN
+    photos ON users.id = photos.user_id
+WHERE
+    ISNULL(photos.id);
+
+
+SELECT 
+    username,
+    photos.id,
+    photos.image_url, 
+    COUNT(*) AS total
+FROM photos
+INNER JOIN likes
+    ON likes.photo_id = photos.id
+INNER JOIN users
+    ON photos.user_id = users.id
+GROUP BY photos.id
+ORDER BY total DESC
+LIMIT 1;
+
+
+select (select count(*) from photos) / (select count(*) from users) as avg
+
+
+
+SELECT 
+    tag_id, tag_name, COUNT(*) AS total
+FROM
+    photo_tags
+        JOIN
+    tags ON photo_tags.tag_id = tags.id
+GROUP BY tag_id
+ORDER BY total DESC
+LIMIT 5;

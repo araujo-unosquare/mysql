@@ -1,0 +1,145 @@
+A window function performs an aggregate-like operation on a set of query rows. However, whereas an aggregate operation groups query rows into a single result row, a window function produces a result for each query row:
+
+The row for which function evaluation occurs is called the current row.
+
+The query rows related to the current row over which function evaluation occurs comprise the window for the current row.
+
+
+
+
+
+If OVER() is empty, the window consists of all query rows and the window function computes a result using all rows. Otherwise, the clauses present within the parentheses determine which query rows are used to compute the function result and how they are partitioned and ordered
+
+
+SELECT emp_no, department, salary, AVG(salary) OVER() FROM employees;
+ 
+SELECT 
+    emp_no, 
+    department, 
+    salary, 
+    MIN(salary) OVER(),
+    MAX(salary) OVER()
+FROM employees;
+
+
+
+A PARTITION BY clause indicates how to divide the query rows into groups. The window function result for a given row is based on the rows of the partition that contains the row. If PARTITION BY is omitted, there is a single partition consisting of all query rows.
+
+SELECT 
+    emp_no, 
+    department, 
+    salary, 
+    AVG(salary) OVER(PARTITION BY department) AS dept_avg,
+    AVG(salary) OVER() AS company_avg
+FROM employees;
+ 
+SELECT 
+    emp_no, 
+    department, 
+    salary, 
+    COUNT(*) OVER(PARTITION BY department) as dept_count
+FROM employees;
+ 
+SELECT 
+    emp_no, 
+    department, 
+    salary, 
+    SUM(salary) OVER(PARTITION BY department) AS dept_payroll,
+    SUM(salary) OVER() AS total_payroll
+FROM employees;
+
+
+An ORDER BY clause indicates how to sort rows in each partition. Partition rows that are equal according to the ORDER BY clause are considered peers. If ORDER BY is omitted, partition rows are unordered, with no processing order implied, and all partition rows are peers.
+
+SELECT 
+    emp_no, 
+    department, 
+    salary, 
+    SUM(salary) OVER(PARTITION BY department ORDER BY salary) AS rolling_dept_salary,
+    SUM(salary) OVER(PARTITION BY department) AS total_dept_salary
+FROM employees;
+ 
+SELECT 
+    emp_no, 
+    department, 
+    salary, 
+    MIN(salary) OVER(PARTITION BY department ORDER BY salary DESC) as rolling_min
+FROM employees;
+
+
+
+RANK() over_clause
+
+Returns the rank of the current row within its partition, with gaps. Peers are considered ties and receive the same rank. This function does not assign consecutive ranks to peer groups if groups of size greater than one exist; the result is noncontiguous rank numbers.
+
+
+ROW_NUMBER() over_clause
+
+Returns the number of the current row within its partition. Rows numbers range from 1 to the number of partition rows.
+
+DENSE_RANK() over_clause
+
+Returns the rank of the current row within its partition, without gaps. Peers are considered ties and receive the same rank. 
+
+SELECT 
+    emp_no, 
+    department, 
+    salary,
+    ROW_NUMBER() OVER(PARTITION BY department ORDER BY SALARY DESC) as dept_row_number,
+    RANK() OVER(PARTITION BY department ORDER BY SALARY DESC) as dept_salary_rank,
+    RANK() OVER(ORDER BY salary DESC) as overall_rank,
+    DENSE_RANK() OVER(ORDER BY salary DESC) as overall_dense_rank,
+    ROW_NUMBER() OVER(ORDER BY salary DESC) as overall_num
+FROM employees ORDER BY overall_rank;
+
+
+
+NTILE(N) over_clause
+
+Divides a partition into N groups (buckets), assigns each row in the partition its bucket number, and returns the bucket number of the current row within its partition. For example, if N is 4, NTILE() divides rows into four buckets. If N is 100, NTILE() divides rows into 100 buckets.
+
+SELECT 
+    emp_no, 
+    department, 
+    salary,
+    NTILE(4) OVER(PARTITION BY department ORDER BY salary DESC) AS dept_salary_quartile,
+	NTILE(4) OVER(ORDER BY salary DESC) AS salary_quartile
+FROM employees;
+
+
+FIRST_VALUE(expr) [null_treatment] over_clause
+
+Returns the value of expr from the first row of the window frame.
+
+SELECT 
+    emp_no, 
+    department, 
+    salary,
+    FIRST_VALUE(emp_no) OVER(PARTITION BY department ORDER BY salary DESC) as highest_paid_dept,
+    FIRST_VALUE(emp_no) OVER(ORDER BY salary DESC) as highest_paid_overall
+FROM employees;
+
+
+
+LEAD(expr [, N[, default]]) [null_treatment] over_clause
+
+Returns the value of expr from the row that leads (follows) the current row by N rows within its partition. If there is no such row, the return value is default. For example, if N is 3, the return value is default for the last three rows. If N or default are missing, the defaults are 1 and NULL, respectively.
+
+
+LAG(expr [, N[, default]]) [null_treatment] over_clause
+
+Returns the value of expr from the row that lags (precedes) the current row by N rows within its partition. If there is no such row, the return value is default. For example, if N is 3, the return value is default for the first three rows. If N or default are missing, the defaults are 1 and NULL, respectively.
+
+SELECT 
+    emp_no, 
+    department, 
+    salary,
+    salary - LAG(salary) OVER(ORDER BY salary DESC) as salary_diff
+FROM employees;
+ 
+SELECT 
+    emp_no, 
+    department, 
+    salary,
+    salary - LAG(salary) OVER(PARTITION BY department ORDER BY salary DESC) as dept_salary_diff
+FROM employees;
